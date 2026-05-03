@@ -14,7 +14,6 @@ scaler = joblib.load("models/scaler.pkl")
 feature_names = joblib.load("models/feature_names.pkl")
 
 # ===== GROQ =====
-
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ===== DB INIT =====
@@ -36,7 +35,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         gender INTEGER,
-        senior INTEGER,git config --global credential.helper manager
+        senior INTEGER,
         partner INTEGER,
         dependents INTEGER,
         tenure INTEGER,
@@ -152,7 +151,7 @@ def submit_details():
 
         probability = model.predict_proba(scaled)[0][1]
 
-        # ✅ FIXED RISK LOGIC
+        # ===== RISK LOGIC =====
         if probability >= 0.5:
             risk = "HIGH"
         elif probability >= 0.3:
@@ -257,7 +256,6 @@ def retention(id):
     customer = c.fetchone()
     conn.close()
 
-    # ✅ STRUCTURED PROMPT
     prompt = f"""
 Customer churn probability: {customer['churn_probability']}
 Risk level: {customer['risk_level']}
@@ -298,6 +296,6 @@ def logout():
     session.clear()
     return redirect("/login")
 
-# ===== RUN =====
+# ===== RUN (FIXED FOR DEPLOYMENT) =====
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
