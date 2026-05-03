@@ -36,7 +36,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         gender INTEGER,
-        senior INTEGER,
+        senior INTEGER,git config --global credential.helper manager
         partner INTEGER,
         dependents INTEGER,
         tenure INTEGER,
