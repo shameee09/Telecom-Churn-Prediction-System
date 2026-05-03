@@ -87,31 +87,44 @@ def register():
 
     return render_template("register.html")
 
-# ===== LOGIN =====
 @app.route("/login", methods=["GET","POST"])
 def login():
     if request.method == "POST":
         conn = sqlite3.connect("database.db")
         c = conn.cursor()
 
-        c.execute("SELECT * FROM users WHERE username=? AND password=?",
-                  (request.form["username"],
-                   request.form["password"]))
+        username = request.form["username"]
+        password = request.form["password"]
 
+        # check if user exists
+        c.execute("SELECT * FROM users WHERE username=?", (username,))
+        user_exists = c.fetchone()
+
+        if not user_exists:
+            flash("User not registered! Kindly register first.", "danger")
+            conn.close()
+            return redirect("/login")
+
+        # check password
+        c.execute("SELECT * FROM users WHERE username=? AND password=?",
+                  (username, password))
         user = c.fetchone()
         conn.close()
 
-        if user:
-            session["user"] = user[1]
-            session["role"] = user[3]
-            flash("Login successful!", "success")
-            if user[3] == "admin":
-                return redirect("/dashboard")
-            else:
-                return redirect("/submit_details")
-        else:
-            flash("User not found! Kindly register first.", "danger")
+        if not user:
+            flash("Invalid password!", "warning")
+            return redirect("/login")
 
+        # SUCCESS LOGIN
+        session["user"] = user[1]
+        session["role"] = user[3]
+
+        flash("Login successful!", "success")
+
+        if user[3] == "admin":
+            return redirect("/dashboard")
+        else:
+            return redirect("/submit_details")
 
     return render_template("login.html")
 
