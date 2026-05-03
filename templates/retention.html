@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+
+<h2><i class="fa-solid fa-lightbulb"></i> Retention Strategy</h2>
+
+<p><b>Customer:</b> {{ customer['name'] }}</p>
+<p><b>Risk:</b> {{ customer['risk_level'] }}</p>
+<p><b>Probability:</b> {{ "%.2f"|format(customer['churn_probability']) }}</p>
+
+<hr>
+
+<!-- NUMBERED OUTPUT -->
+<ol style="line-height:1.8; padding-left:20px;">
+{% for line in strategy.split('\n') %}
+    {% if line.strip() != "" %}
+        <li>{{ line.replace('1.','').replace('2.','').replace('3.','').replace('4.','').replace('5.','') }}</li>
+    {% endif %}
+{% endfor %}
+</ol>
+
+<br>
+
+<!-- BACK BUTTON -->
+<a href="/dashboard">
+    <button class="btn">⬅ Back to Dashboard</button>
+</a>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2>Customer List</h2>
+</div>
+
+<div class="card">
+<table>
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Probability</th>
+    <th>Prediction</th>
+    <th>Risk</th>
+    <th>Action</th>
+</tr>
+
+{% for c in data %}
+<tr>
+    <td>{{ c[0] }}</td>
+    <td>{{ c[1] }}</td>
+
+    <!-- Probability -->
+    <td>
+        {% if c[21] %}
+            {{ "%.2f"|format(c[21]) }}
+        {% else %}
+            0.00
+        {% endif %}
+    </td>
+
+    <!-- Prediction -->
+    <td>
+        {% if c[21] %}
+            {% if c[21] >= 0.5 %}
+                <span style="color:red;font-weight:bold;">CHURN</span>
+            {% else %}
+                <span style="color:green;font-weight:bold;">NO CHURN</span>
+            {% endif %}
+        {% else %}
+            PENDING
+        {% endif %}
+    </td>
+
+    <!-- Risk -->
+    <td>
+        {% if c[22] == "HIGH" %}
+            <span class="badge-high">HIGH</span>
+        {% elif c[22] == "MEDIUM" %}
+            <span class="badge-medium">MEDIUM</span>
+        {% else %}
+            <span class="badge-low">LOW</span>
+        {% endif %}
+    </td>
+
+    <!-- Action -->
+    <td>
+        <a href="/retention/{{ c[0] }}">
+            <button class="btn btn-warning">Suggestion</button>
+        </a>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+{% endblock %}

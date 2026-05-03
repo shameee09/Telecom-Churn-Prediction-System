@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<h2 style="margin-bottom:20px;">
+    <i class="fa-solid fa-chart-line"></i> Dashboard
+</h2>
+
+<!-- CARDS -->
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+
+<div class="card" style="flex:1; text-align:center; background:#3b82f6; color:white;">
+    <h3><i class="fa-solid fa-users"></i></h3>
+    <h2>{{ total }}</h2>
+    <p>Total Customers</p>
+</div>
+
+<div class="card" style="flex:1; text-align:center; background:#ef4444; color:white;">
+    <h3><i class="fa-solid fa-triangle-exclamation"></i></h3>
+    <h2>{{ high_risk }}</h2>
+    <p>High Risk</p>
+</div>
+
+<div class="card" style="flex:1; text-align:center; background:#f59e0b; color:white;">
+    <h3><i class="fa-solid fa-chart-simple"></i></h3>
+    <h2>{{ medium_risk }}</h2>
+    <p>Medium Risk</p>
+</div>
+
+<div class="card" style="flex:1; text-align:center; background:#22c55e; color:white;">
+    <h3><i class="fa-solid fa-circle-check"></i></h3>
+    <h2>{{ low_risk }}</h2>
+    <p>Low Risk</p>
+</div>
+
+</div>
+
+<!-- CHARTS -->
+<div style="display:flex; gap:30px; margin-top:40px; flex-wrap:wrap;">
+
+<div class="card" style="width:400px;">
+    <h3>Risk Distribution</h3>
+    <canvas id="pieChart"></canvas>
+</div>
+
+<div class="card" style="width:400px;">
+    <h3>Customer Overview</h3>
+    <canvas id="barChart"></canvas>
+</div>
+
+</div>
+
+<script>
+window.onload = function(){
+
+// ✅ FIX: convert safely to numbers
+const low = Number("{{ low_risk }}");
+const medium = Number("{{ medium_risk }}");
+const high = Number("{{ high_risk }}");
+const total = Number("{{ total }}");
+
+// PIE CHART
+new Chart(document.getElementById("pieChart"), {
+    type: "pie",
+    data: {
+        labels: ["Low", "Medium", "High"],
+        datasets: [{
+            data: [low, medium, high],
+            backgroundColor: ["#22c55e","#f59e0b","#ef4444"]
+        }]
+    }
+});
+
+// BAR CHART
+new Chart(document.getElementById("barChart"), {
+    type: "bar",
+    data: {
+        labels: ["Total", "High Risk", "Medium", "Low"],
+        datasets: [{
+            data: [total, high, medium, low],
+            backgroundColor: ["#3b82f6","#ef4444","#f59e0b","#22c55e"]
+        }]
+    },
+    options:{
+        plugins:{legend:{display:false}}
+    }
+});
+
+}
+</script>
+
+{% endblock %}
