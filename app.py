@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session,flash
 import sqlite3
 import joblib
 import pandas as pd
@@ -20,7 +20,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def init_db():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
+    
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,12 +75,6 @@ def register():
         conn = sqlite3.connect("database.db")
         c = conn.cursor()
 
-        # check user exists
-        c.execute("SELECT * FROM users WHERE username=?", (request.form["username"],))
-        if c.fetchone():
-            flash("User already exists! Try login.", "danger")
-            return redirect("/register")
-
         c.execute("INSERT INTO users VALUES (NULL,?,?,?)",
                   (request.form["username"],
                    request.form["password"],
@@ -88,7 +82,6 @@ def register():
 
         conn.commit()
         conn.close()
-
         flash("Registered successfully! Please login.", "success")
         return redirect("/login")
 
@@ -111,9 +104,7 @@ def login():
         if user:
             session["user"] = user[1]
             session["role"] = user[3]
-
             flash("Login successful!", "success")
-
             if user[3] == "admin":
                 return redirect("/dashboard")
             else:
@@ -121,22 +112,13 @@ def login():
         else:
             flash("User not found! Kindly register first.", "danger")
 
-    return render_template("login.html")
 
-# ===== PROTECTED ROUTES =====
-def check_login(role=None):
-    if "user" not in session:
-        flash("Please login first!", "warning")
-        return False
-    if role and session["role"] != role:
-        flash("Unauthorized access!", "danger")
-        return False
-    return True
+    return render_template("login.html")
 
 # ===== CUSTOMER SUBMIT =====
 @app.route("/submit_details", methods=["GET","POST"])
 def submit_details():
-    if not check_login("customer"):
+    if "user" not in session or session["role"] != "customer":
         return redirect("/login")
 
     if request.method == "POST":
@@ -173,6 +155,7 @@ def submit_details():
 
         probability = model.predict_proba(scaled)[0][1]
 
+        # ===== RISK LOGIC =====
         if probability >= 0.5:
             risk = "HIGH"
         elif probability >= 0.3:
@@ -214,7 +197,6 @@ def submit_details():
         conn.commit()
         conn.close()
 
-        flash("Details submitted successfully!", "success")
         return redirect("/submit_details")
 
     return render_template("submit_details.html")
@@ -222,7 +204,7 @@ def submit_details():
 # ===== DASHBOARD =====
 @app.route("/dashboard")
 def dashboard():
-    if not check_login("admin"):
+    if "user" not in session or session["role"] != "admin":
         return redirect("/login")
 
     conn = sqlite3.connect("database.db")
@@ -248,6 +230,70 @@ def dashboard():
                            medium_risk=medium,
                            low_risk=low)
 
+# ===== CUSTOMERS =====
+@app.route("/customers")
+def customers():
+    if "user" not in session or session["role"] != "admin":
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM customers")
+    data = c.fetchall()
+
+    conn.close()
+
+    return render_template("customers.html", data=data)
+
+# ===== GROQ RETENTION =====
+@app.route("/retention/<int:id>")
+def retention(id):
+    if "user" not in session or session["role"] != "admin":
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM customers WHERE id=?", (id,))
+    customer = c.fetchone()
+    conn.close()
+
+    prompt = f"""
+Customer churn probability: {customer['churn_probability']}
+Risk level: {customer['risk_level']}
+
+Give retention strategy strictly like:
+
+1. ...
+2. ...
+3. ...
+4. ...
+5. ...
+
+Rules:
+- Each in new line
+- No paragraph
+- Short points
+"""
+
+    response = client.chat.completions.create(
+        messages=[
+            {"role":"system","content":"You are telecom retention expert"},
+            {"role":"user","content":prompt}
+        ],
+        model="llama-3.1-8b-instant"
+    )
+
+    strategy = response.choices[0].message.content
+
+    return render_template(
+        "retention.html",
+        customer=customer,
+        strategy=strategy
+    )
+
 # ===== LOGOUT =====
 @app.route("/logout")
 def logout():
@@ -255,6 +301,6 @@ def logout():
     flash("Logged out successfully!", "info")
     return redirect("/login")
 
-# ===== RUN =====
+# ===== RUN (FIXED FOR DEPLOYMENT) =====
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

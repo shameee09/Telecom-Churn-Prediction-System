@@ -84,20 +84,9 @@ th{
 }
 
 /* BADGES */
-.badge-low{
-    color:green;
-    font-weight:bold;
-}
-
-.badge-medium{
-    color:orange;
-    font-weight:bold;
-}
-
-.badge-high{
-    color:red;
-    font-weight:bold;
-}
+.badge-low{color:green;font-weight:bold}
+.badge-medium{color:orange;font-weight:bold}
+.badge-high{color:red;font-weight:bold}
 
 /* FLASH ALERTS */
 .alert{
@@ -105,26 +94,17 @@ th{
     margin-bottom:15px;
     border-radius:6px;
     font-weight:bold;
+    animation:fadeIn 0.5s ease;
 }
 
-.alert-success{
-    background:#d4edda;
-    color:#155724;
-}
+.alert-success{background:#d4edda;color:#155724;}
+.alert-danger{background:#f8d7da;color:#721c24;}
+.alert-warning{background:#fff3cd;color:#856404;}
+.alert-info{background:#d1ecf1;color:#0c5460;}
 
-.alert-danger{
-    background:#f8d7da;
-    color:#721c24;
-}
-
-.alert-warning{
-    background:#fff3cd;
-    color:#856404;
-}
-
-.alert-info{
-    background:#d1ecf1;
-    color:#0c5460;
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(-10px);}
+    to{opacity:1; transform:translateY(0);}
 }
 </style>
 
@@ -143,19 +123,30 @@ th{
 <!-- CONTENT -->
 <div class="content">
 
-<!-- FLASH MESSAGES -->
+<!-- ✅ SHOW ONLY LAST MESSAGE -->
 {% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-    <div class="alert alert-{{category}}">
+  {% if messages %}
+    {% set category, message = messages[-1] %}
+    <div class="alert alert-{{category}}" id="flashMsg">
       {{ message }}
     </div>
-  {% endfor %}
+  {% endif %}
 {% endwith %}
 
 <!-- PAGE CONTENT -->
 {% block content %}{% endblock %}
 
 </div>
+
+<!-- ✅ AUTO HIDE -->
+<script>
+setTimeout(() => {
+    let msg = document.getElementById("flashMsg");
+    if(msg){
+        msg.style.display = "none";
+    }
+}, 3000);
+</script>
 
 </body>
 </html>
