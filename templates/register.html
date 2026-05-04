@@ -127,5 +127,17 @@ font-weight:bold;
 </div>
 </div>
 
+<script>
+setTimeout(() => {
+    const alertBox = document.querySelector('.alert');
+    if(alertBox){
+        alertBox.style.transition = "0.5s";
+        alertBox.style.opacity = "0";
+        setTimeout(() => alertBox.remove(), 500);
+    }
+}, 3000);
+</script>
+
 </body>
 </html>
+
